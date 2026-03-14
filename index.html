@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Bitumen Calculator</title>
+  <style>
+    :root {
+      --bg: #f3f4f6;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #d1d5db;
+      --primary: #111827;
+      --primary-text: #ffffff;
+      --success-bg: #ecfdf5;
+      --success-border: #a7f3d0;
+      --success-text: #065f46;
+      --error-bg: #fef2f2;
+      --error-border: #fecaca;
+      --error-text: #b91c1c;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .hero, .card {
+      background: var(--card);
+      border-radius: 22px;
+      padding: 20px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+      margin-bottom: 16px;
+    }
+
+    .hero {
+      background: var(--primary);
+      color: white;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { font-size: 30px; margin-bottom: 8px; }
+    h2 { font-size: 24px; margin-bottom: 8px; }
+    h3 { font-size: 18px; margin-bottom: 10px; }
+    .muted { color: var(--muted); }
+    .hero .muted { color: #d1d5db; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      font-size: 16px;
+      background: white;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    button {
+      border: none;
+      border-radius: 14px;
+      padding: 14px 18px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .primary {
+      background: var(--primary);
+      color: var(--primary-text);
+    }
+
+    .secondary {
+      background: white;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .segment.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    .segment {
+      background: white;
+      border: 1px solid var(--border);
+    }
+
+    .message {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid transparent;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .error {
+      background: var(--error-bg);
+      color: var(--error-text);
+      border-color: var(--error-border);
+    }
+
+    .success {
+      background: var(--success-bg);
+      color: var(--success-text);
+      border-color: var(--success-border);
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .logic-box {
+      background: #f9fafb;
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    .small {
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    @media (min-width: 860px) {
+      .grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .mini-grid {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="hero">
+      <h1>Bitumen Calculator</h1>
+      <p class="muted">Safari-friendly single page web app with interpolation for VG-10 Dip at Centre Pipe and 30 MT Cylindrical Tanker quantity lookup.</p>
+    </div>
+
+    <div class="grid">
+      <section class="card">
+        <h2>1. VG-10 Dip at Centre Pipe</h2>
+        <p class="muted">Enter only inches, only feet, or both. Quantity is calculated using exact match or linear interpolation between the nearest chart points.</p>
+
+        <div class="inputs">
+          <div>
+            <label for="vgFeet">Feet</label>
+            <input id="vgFeet" type="number" min="0" step="any" inputmode="decimal" placeholder="Example: 2" />
+          </div>
+          <div>
+            <label for="vgInches">Inches</label>
+            <input id="vgInches" type="number" min="0" step="any" inputmode="decimal" placeholder="Example: 6 or 15" />
+          </div>
+        </div>
+
+        <div class="buttons">
+          <button class="primary" onclick="calculateVG10()">Calculate</button>
+          <button class="secondary" onclick="resetVG10()">Reset</button>
+        </div>
+
+        <div id="vgOutput"></div>
+      </section>
+
+      <section class="card">
+        <h2>2. Cylindrical Tanker (30 MT)</h2>
+        <p class="muted">Calculate quantity using Dip or Empty Space. Values between chart points are interpolated automatically.</p>
+
+        <div class="segmented">
+          <button id="dipBtn" class="segment active" onclick="setTankerMode('dip')">Dip</button>
+          <button id="emptyBtn" class="segment" onclick="setTankerMode('emptySpace')">Empty Space</button>
+        </div>
+
+        <div class="inputs">
+          <div>
+            <label for="tankerFeet">Feet</label>
+            <input id="tankerFeet" type="number" min="0" step="any" inputmode="decimal" placeholder="Example: 4" />
+          </div>
+          <div>
+            <label for="tankerInches">Inches</label>
+            <input id="tankerInches" type="number" min="0" step="any" inputmode="decimal" placeholder="Example: 6 or 18" />
+          </div>
+        </div>
+
+        <div class="buttons">
+          <button class="primary" onclick="calculateTanker()">Calculate</button>
+          <button class="secondary" onclick="resetTanker()">Reset</button>
+        </div>
+
+        <div id="tankerOutput"></div>
+      </section>
+    </div>
+
+    <section class="card">
+      <h3>Input Logic Used</h3>
+      <div class="mini-grid">
+        <div class="logic-box">
+          <strong>Only inches entered</strong>
+          <p class="small muted">Feet is treated as 0. You can enter 9, 15, 27, or decimal inches like 27.5.</p>
+        </div>
+        <div class="logic-box">
+          <strong>Only feet entered</strong>
+          <p class="small muted">Inches is treated as 0. Decimal feet is also allowed, for example 2.5 feet.</p>
+        </div>
+        <div class="logic-box">
+          <strong>Feet and inches entered</strong>
+          <p class="small muted">Total inches = (feet × 12) + inches. Then the app uses exact match or linear interpolation.</p>
+        </div>
+      </div>
+      <p class="small muted" style="margin-top:12px;">Interpolation works only inside the chart range. Outside the minimum or maximum chart values, the app shows an error.</p>
+    </section>
+  </div>
+
+  <script>
+    const vg10Table = [
+      { totalInches: 6, qty: 1.24 },
+      { totalInches: 12, qty: 2.56 },
+      { totalInches: 18, qty: 3.83 },
+      { totalInches: 24, qty: 6.36 },
+      { totalInches: 30, qty: 8.01 },
+      { totalInches: 36, qty: 9.66 },
+      { totalInches: 42, qty: 11.31 },
+      { totalInches: 48, qty: 12.97 },
+      { totalInches: 54, qty: 14.63 },
+      { totalInches: 60, qty: 16.28 },
+      { totalInches: 66, qty: 17.94 },
+      { totalInches: 72, qty: 19.6 },
+      { totalInches: 78, qty: 21.25 },
+      { totalInches: 84, qty: 22.91 },
+      { totalInches: 90, qty: 24.56 },
+      { totalInches: 93, qty: 25.39 }
+    ];
+
+    const tankerTable = [
+      { emptySpaceInches: 75, dipInches: 3, qty: 0.9 },
+      { emptySpaceInches: 72, dipInches: 6, qty: 1.95 },
+      { emptySpaceInches: 69, dipInches: 9, qty: 3.04 },
+      { emptySpaceInches: 66, dipInches: 12, qty: 4.16 },
+      { emptySpaceInches: 63, dipInches: 15, qty: 5.32 },
+      { emptySpaceInches: 60, dipInches: 18, qty: 6.51 },
+      { emptySpaceInches: 57, dipInches: 21, qty: 7.7 },
+      { emptySpaceInches: 54, dipInches: 24, qty: 8.92 },
+      { emptySpaceInches: 51, dipInches: 27, qty: 10.15 },
+      { emptySpaceInches: 48, dipInches: 30, qty: 11.38 },
+      { emptySpaceInches: 45, dipInches: 33, qty: 12.62 },
+      { emptySpaceInches: 42, dipInches: 36, qty: 13.85 },
+      { emptySpaceInches: 39, dipInches: 39, qty: 15.06 },
+      { emptySpaceInches: 36, dipInches: 42, qty: 16.26 },
+      { emptySpaceInches: 33, dipInches: 45, qty: 17.45 },
+      { emptySpaceInches: 30, dipInches: 48, qty: 18.6 },
+      { emptySpaceInches: 27, dipInches: 51, qty: 19.73 },
+      { emptySpaceInches: 24, dipInches: 54, qty: 20.82 },
+      { emptySpaceInches: 21, dipInches: 57, qty: 21.87 },
+      { emptySpaceInches: 18, dipInches: 60, qty: 22.89 },
+      { emptySpaceInches: 15, dipInches: 63, qty: 23.82 },
+      { emptySpaceInches: 12, dipInches: 66, qty: 24.68 },
+      { emptySpaceInches: 9, dipInches: 69, qty: 25.45 },
+      { emptySpaceInches: 6, dipInches: 72, qty: 26.11 },
+      { emptySpaceInches: 3, dipInches: 75, qty: 26.63 },
+      { emptySpaceInches: 0, dipInches: 78, qty: 26.94 }
+    ];
+
+    let tankerMode = 'dip';
+
+    function formatMeasure(totalInches) {
+      const feet = Math.floor(totalInches / 12);
+      const inches = totalInches - (feet * 12);
+      const inchesText = Number(inches.toFixed(2)).toString();
+      if (feet === 0) return `${inchesText}"`;
+      return `${feet}'-${inchesText}"`;
+    }
+
+    function formatQty(qty) {
+      return Number(qty).toFixed(3).replace(/0+$/, '').replace(/\.$/, '');
+    }
+
+    function parseInput(feetValue, inchesValue) {
+      const feetText = feetValue.trim();
+      const inchesText = inchesValue.trim();
+
+      if (!feetText && !inchesText) {
+        return { error: 'Enter feet, inches, or both.' };
+      }
+
+      const feet = feetText === '' ? 0 : Number(feetText);
+      const inches = inchesText === '' ? 0 : Number(inchesText);
+
+      if (!Number.isFinite(feet) || !Number.isFinite(inches)) {
+        return { error: 'Please enter valid numbers only.' };
+      }
+
+      if (feet < 0 || inches < 0) {
+        return { error: 'Feet and inches cannot be negative.' };
+      }
+
+      return { totalInches: (feet * 12) + inches };
+    }
+
+    function interpolateFromTable(table, valueKey, targetValue) {
+      const sorted = [...table].sort((a, b) => a[valueKey] - b[valueKey]);
+      const min = sorted[0][valueKey];
+      const max = sorted[sorted.length - 1][valueKey];
+
+      if (targetValue < min || targetValue > max) {
+        return { error: `Value is outside chart range. Enter a value between ${formatMeasure(min)} and ${formatMeasure(max)}.` };
+      }
+
+      const exact = sorted.find(item => item[valueKey] === targetValue);
+      if (exact) {
+        return {
+          qty: exact.qty,
+          lower: exact,
+          upper: exact,
+          exact: true
+        };
+      }
+
+      for (let i = 0; i < sorted.length - 1; i++) {
+        const lower = sorted[i];
+        const upper = sorted[i + 1];
+        const lowerValue = lower[valueKey];
+        const upperValue = upper[valueKey];
+
+        if (targetValue > lowerValue && targetValue < upperValue) {
+          const ratio = (targetValue - lowerValue) / (upperValue - lowerValue);
+          const qty = lower.qty + ratio * (upper.qty - lower.qty);
+          return { qty, lower, upper, exact: false };
+        }
+      }
+
+      return { error: 'Interpolation could not be calculated for this value.' };
+    }
+
+    function showMessage(elementId, type, html) {
+      document.getElementById(elementId).innerHTML = `<div class="message ${type}">${html}</div>`;
+    }
+
+    function clearMessage(elementId) {
+      document.getElementById(elementId).innerHTML = '';
+    }
+
+    function calculateVG10() {
+      const feet = document.getElementById('vgFeet').value;
+      const inches = document.getElementById('vgInches').value;
+      const parsed = parseInput(feet, inches);
+
+      if (parsed.error) {
+        showMessage('vgOutput', 'error', parsed.error);
+        return;
+      }
+
+      const result = interpolateFromTable(vg10Table, 'totalInches', parsed.totalInches);
+      if (result.error) {
+        showMessage('vgOutput', 'error', result.error);
+        return;
+      }
+
+      const method = result.exact
+        ? 'Exact chart match used.'
+        : `Interpolated between ${formatMeasure(result.lower.totalInches)} (${formatQty(result.lower.qty)} MT) and ${formatMeasure(result.upper.totalInches)} (${formatQty(result.upper.qty)} MT).`;
+
+      showMessage(
+        'vgOutput',
+        'success',
+        `<strong>Input Dip:</strong> ${formatMeasure(parsed.totalInches)}<br><strong>Usable Bitumen Qty:</strong> ${formatQty(result.qty)} MT<br><span class="small">${method}</span>`
+      );
+    }
+
+    function resetVG10() {
+      document.getElementById('vgFeet').value = '';
+      document.getElementById('vgInches').value = '';
+      clearMessage('vgOutput');
+    }
+
+    function setTankerMode(mode) {
+      tankerMode = mode;
+      document.getElementById('dipBtn').classList.toggle('active', mode === 'dip');
+      document.getElementById('emptyBtn').classList.toggle('active', mode === 'emptySpace');
+      clearMessage('tankerOutput');
+    }
+
+    function calculateTanker() {
+      const feet = document.getElementById('tankerFeet').value;
+      const inches = document.getElementById('tankerInches').value;
+      const parsed = parseInput(feet, inches);
+
+      if (parsed.error) {
+        showMessage('tankerOutput', 'error', parsed.error);
+        return;
+      }
+
+      const key = tankerMode === 'dip' ? 'dipInches' : 'emptySpaceInches';
+      const result = interpolateFromTable(tankerTable, key, parsed.totalInches);
+
+      if (result.error) {
+        showMessage('tankerOutput', 'error', result.error);
+        return;
+      }
+
+      const approxDip = tankerMode === 'dip'
+        ? parsed.totalInches
+        : result.lower === result.upper
+          ? result.lower.dipInches
+          : result.lower.dipInches + ((parsed.totalInches - result.lower.emptySpaceInches) / (result.upper.emptySpaceInches - result.lower.emptySpaceInches)) * (result.upper.dipInches - result.lower.dipInches);
+
+      const approxEmptySpace = tankerMode === 'emptySpace'
+        ? parsed.totalInches
+        : result.lower === result.upper
+          ? result.lower.emptySpaceInches
+          : result.lower.emptySpaceInches + ((parsed.totalInches - result.lower.dipInches) / (result.upper.dipInches - result.lower.dipInches)) * (result.upper.emptySpaceInches - result.lower.emptySpaceInches);
+
+      const method = result.exact
+        ? 'Exact chart match used.'
+        : `Interpolated between ${formatMeasure(result.lower[key])} (${formatQty(result.lower.qty)} MT) and ${formatMeasure(result.upper[key])} (${formatQty(result.upper.qty)} MT).`;
+
+      showMessage(
+        'tankerOutput',
+        'success',
+        `<strong>Dip:</strong> ${formatMeasure(approxDip)}<br><strong>Empty Space:</strong> ${formatMeasure(approxEmptySpace)}<br><strong>Net Cumulative Qty:</strong> ${formatQty(result.qty)} MT<br><span class="small">${method}</span>`
+      );
+    }
+
+    function resetTanker() {
+      document.getElementById('tankerFeet').value = '';
+      document.getElementById('tankerInches').value = '';
+      clearMessage('tankerOutput');
+    }
+  </script>
+</body>
+</html>
